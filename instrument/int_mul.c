@@ -129,8 +129,8 @@ static void flush(struct stream_s *stream)
 #define OF  0x0001
 #define CF  0x0100
 
-static bool option_debug   = false;
-static bool option_disable = false;
+static bool option_debug   = true;
+static bool option_disable = true;
 
 /*
  * Safe multiplication.
@@ -241,28 +241,6 @@ void init(int argc, char **argv, char **envp)
     for (; envp && *envp != NULL; envp++)
     {
         char *var = *envp;
-        if (var[0] == 'D' &&
-            var[1] == 'E' &&
-            var[2] == 'B' &&
-            var[3] == 'U' &&
-            var[4] == 'G' &&
-            var[5] == '=' &&
-            var[6] != '0')
-        {
-            option_debug = true;
-        }
-        if (var[0] == 'D' &&
-            var[1] == 'I' &&
-            var[2] == 'S' &&
-            var[3] == 'A' &&
-            var[4] == 'B' &&
-            var[5] == 'L' &&
-            var[6] == 'E' &&
-            var[7] == '=' &&
-            var[8] != '0')
-        {
-            option_disable = true;
-        }
     }
 }
 
