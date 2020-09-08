@@ -347,7 +347,7 @@ struct Binary
     PatchQueue Q;                       // Instructions queued for patching.
 
     InstrSet Is;                        // All (known) instructions.
-    TrampolineSet Ts;                   // All current trampoline templates.
+    TrampolineSet Ts;                   // All current trampoline instrument.
     
     Allocator allocator;                // Virtual address allocation.
 
