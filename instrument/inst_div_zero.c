@@ -136,7 +136,7 @@ static bool option_disable = true;
 /*
  * Safe division
  */
-static void safe_div(int32_t s1, uint16_t *rflags, const char *asm_str, const void *addr)
+static void safe_div(int64_t s1, uint16_t *rflags, const char *asm_str, const void *addr)
 {
     __int128 d = (__int128)s1;
     bool iszero = (d == 0);
@@ -160,11 +160,21 @@ static void safe_div(int32_t s1, uint16_t *rflags, const char *asm_str, const vo
 /*
  * Safe division (32bit)
  */
-void div_r32r32(const int32_t *S1,
+void div_r32(const int32_t *S1,
                 uint16_t *rflags, const char *asm_str, const void *addr)
 {
    safe_div((int64_t)*S1, rflags, asm_str, addr);
 }
+
+/*
+ * Safe division (64bit)
+ */
+void div_r64(const int64_t *S1,
+             uint16_t *rflags, const char *asm_str, const void *addr)
+{
+    safe_div(*S1, rflags, asm_str, addr);
+}
+
 
 /*
  * Init.
