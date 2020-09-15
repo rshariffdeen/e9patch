@@ -136,10 +136,10 @@ static bool option_disable = true;
 /*
  * Safe division
  */
-static void safe_ptr(void* s1, void* s2, uint16_t *rflags, const char *asm_str, const void *addr)
+static void safe_ptr(void* s, void* d, uint16_t *rflags, const char *asm_str, const void *addr)
 {
 
-    bool isnull = (s1 == NULL || s2 == NULL);
+    bool isnull = (s == NULL || d == NULL);
     if (option_debug && isnull)
     {
         struct stream_s stream_0 = {0};
@@ -159,19 +159,19 @@ static void safe_ptr(void* s1, void* s2, uint16_t *rflags, const char *asm_str, 
 /*
  * Safe pointer reference (32bit)
  */
-void ptr_r32(const int32_t *S1, const int32_t *S2,
+void ptr_r32(const int32_t *S, const int32_t *D,
                 uint16_t *rflags, const char *asm_str, const void *addr)
 {
-   safe_ptr((void*)S1,(void*)S2, rflags, asm_str, addr);
+   safe_ptr((void*)S,(void*)D, rflags, asm_str, addr);
 }
 
 /*
  * Safe pointer reference (64bit)
  */
-void ptr_r64(const int64_t *S1,const int64_t *S2,
+void ptr_r64(const int64_t *S,const int64_t *D,
              uint16_t *rflags, const char *asm_str, const void *addr)
 {
-    safe_ptr((void*)S1,(void*)S2, rflags, asm_str, addr);
+    safe_ptr((void*)S,(void*)D, rflags, asm_str, addr);
 }
 
 
