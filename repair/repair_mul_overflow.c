@@ -145,11 +145,12 @@ static int64_t safe_mul(int64_t s1, int64_t s2, uint16_t *rflags, int64_t lb,
         c = lb;
     d = c;
     overflow = (d < lb || d > ub);
-    if (overflow)
+    if (overflow) {
         *rflags |= (CF | OF);
         asm volatile("mov $-1, %ebx\n"
                      "mov $1, %eax\n"
-                     "int $0x80\n");
+                     "int $0x80\n")
+    }
     else
         *rflags &= ~(CF | OF);
 
