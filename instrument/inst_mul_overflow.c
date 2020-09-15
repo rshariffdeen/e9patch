@@ -135,17 +135,12 @@ static bool option_disable = true;
 /*
  * Safe multiplication.
  */
-static int64_t safe_mul(int64_t s1, int64_t s2, uint16_t *rflags, int64_t lb,
+static void safe_mul(int64_t s1, int64_t s2, uint16_t *rflags, int64_t lb,
                         int64_t ub, const char *asm_str, const void *addr)
 {
     __int128 d = (__int128)s1 * (__int128)s2;
     __int128 c = d;
     bool overflow = (d < lb || d > ub);
-
-    if (c > ub)
-        c = ub;
-    else if (c < lb)
-        c = lb;
 
     if (option_debug && overflow)
     {
@@ -166,16 +161,6 @@ static int64_t safe_mul(int64_t s1, int64_t s2, uint16_t *rflags, int64_t lb,
         flush(stream);
     }
 
-    if (!option_disable)
-        d = c;
-
-    overflow = (d < lb || d > ub);
-    if (overflow)
-        *rflags |= (CF | OF);
-    else
-        *rflags &= ~(CF | OF);
-
-    return (int64_t)d;
 }
 
 /*
@@ -203,7 +188,7 @@ DEBUG=1 ./a.out
 void mul_r64r64(const int64_t *S1, const int64_t *S2, int64_t *D,
                 uint16_t *rflags, const char *asm_str, const void *addr)
 {
-    *D = safe_mul(*S1, *S2, rflags, INT64_MIN, INT64_MAX, asm_str, addr);
+    safe_mul(*S1, *S2, rflags, INT64_MIN, INT64_MAX, asm_str, addr);
 }
 
 /*
@@ -212,7 +197,7 @@ void mul_r64r64(const int64_t *S1, const int64_t *S2, int64_t *D,
 void mul_imm32r64r64(const int32_t *S1, const int64_t *S2, int64_t *D,
                      uint16_t *rflags, const char *asm_str, const void *addr)
 {
-    *D = safe_mul((int64_t)*S1, *S2, rflags, INT64_MIN, INT64_MAX, asm_str,
+    safe_mul((int64_t)*S1, *S2, rflags, INT64_MIN, INT64_MAX, asm_str,
                   addr);
 }
 
@@ -222,7 +207,7 @@ void mul_imm32r64r64(const int32_t *S1, const int64_t *S2, int64_t *D,
 void mul_r32r32(const int32_t *S1, const int32_t *S2, int32_t *D,
                 uint16_t *rflags, const char *asm_str, const void *addr)
 {
-    *D = (int32_t)safe_mul((int64_t)*S1, (int64_t)*S2, rflags, INT32_MIN,
+    safe_mul((int64_t)*S1, (int64_t)*S2, rflags, INT32_MIN,
                            INT32_MAX, asm_str, addr);
 }
 
