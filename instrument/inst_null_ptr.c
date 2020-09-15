@@ -155,7 +155,7 @@ static void safe_ptr(void* s, void* d, uint16_t *rflags, const char *asm_str, co
         write_hex(stream, (intptr_t)s);
         write_string(stream, " - ");
         write_hex(stream, (intptr_t)d);
-        write_string(stream, " ()\33[0m\n");
+        write_string(stream, " )\33[0m\n");
         flush(stream);
     }
 
