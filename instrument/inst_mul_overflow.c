@@ -152,7 +152,7 @@ static int64_t safe_mul(int64_t s1, int64_t s2, uint16_t *rflags, int64_t lb,
         struct stream_s stream_0 = {0};
         stream_t stream = &stream_0;
 
-        write_string(stream, "\33[31mCLAMP\33[0m: \33[32m");
+        write_string(stream, "\33[31mDETECT\33[0m: \33[32m");
         write_string(stream, asm_str);
         write_string(stream, "\33[0m @ ");
         write_hex(stream, (intptr_t)addr);
