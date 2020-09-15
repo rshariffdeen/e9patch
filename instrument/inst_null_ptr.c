@@ -149,6 +149,12 @@ static void safe_ptr(void* s, void* d, uint16_t *rflags, const char *asm_str, co
         write_string(stream, asm_str);
         write_string(stream, "\33[0m @ ");
         write_hex(stream, (intptr_t)addr);
+
+        write_string(stream, " (");
+        write_string(stream, " ");
+        write_hex(stream, (intptr_t)s);
+        write_string(stream, " - ");
+        write_hex(stream, (intptr_t)d);
         write_string(stream, " ()\33[0m\n");
         flush(stream);
     }
