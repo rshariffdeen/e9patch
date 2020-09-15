@@ -143,7 +143,7 @@ static int64_t safe_mul(int64_t s1, int64_t s2, uint16_t *rflags, int64_t lb,
         c = ub;
     else if (c < lb)
         c = lb;
-    d = c;
+//    d = c;
     overflow = (d < lb || d > ub);
     if (overflow) {
         *rflags |= (CF | OF);
