@@ -150,7 +150,7 @@ static void safe_div(int32_t s1, uint16_t *rflags, const char *asm_str, const vo
         write_string(stream, asm_str);
         write_string(stream, "\33[0m @ ");
         write_hex(stream, (intptr_t)addr);
-        write_string(stream, "\33[0m\n");
+        write_string(stream, "\33[0m()\n");
         flush(stream);
     }
 
