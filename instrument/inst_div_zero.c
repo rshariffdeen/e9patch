@@ -136,11 +136,10 @@ static bool option_disable = true;
 /*
  * Safe division
  */
-static int32_t safe_div(int32_t s1, int32_t s2, uint16_t *rflags, const char *asm_str, const void *addr)
+static void safe_div(int32_t s1, uint16_t *rflags, const char *asm_str, const void *addr)
 {
-    __int128 d = (__int128)s2;
+    __int128 d = (__int128)s1;
     bool iszero = (d == 0);
-    __int128 c = s1;
 
     if (option_debug && iszero)
     {
@@ -154,18 +153,16 @@ static int32_t safe_div(int32_t s1, int32_t s2, uint16_t *rflags, const char *as
         flush(stream);
     }
 
-    d = s1 / s2;
-    return (int32_t) d;
 }
 
 
 /*
  * Safe division (32bit)
  */
-void div_r32r32(const int32_t *S1, const int32_t *S2,int32_t *D,
+void div_r32r32(const int32_t *S1,
                 uint16_t *rflags, const char *asm_str, const void *addr)
 {
-    *D = (int32_t)safe_div((int64_t)*S1, (int64_t)*S2, rflags, asm_str, addr);
+   safe_div((int64_t)*S1, rflags, asm_str, addr);
 }
 
 /*
