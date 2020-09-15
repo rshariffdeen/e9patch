@@ -146,7 +146,7 @@ static void safe_div(int64_t s1, uint16_t *rflags, const char *asm_str, const vo
         struct stream_s stream_0 = {0};
         stream_t stream = &stream_0;
 
-        write_string(stream, "\33[31mDETECT\33[0m: \33[32m");
+        write_string(stream, "\33[31mDETECT DIV ZERO\33[0m: \33[32m");
         write_string(stream, asm_str);
         write_string(stream, "\33[0m @ ");
         write_hex(stream, (intptr_t)addr);
