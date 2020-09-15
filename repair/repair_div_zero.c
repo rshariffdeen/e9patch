@@ -136,36 +136,28 @@ static bool option_disable = true;
 /*
  * Safe division
  */
-static int32_t safe_div(int32_t s1, int32_t s2, uint16_t *rflags, const char *asm_str, const void *addr)
+static void safe_div(int32_t s1, uint16_t *rflags, const char *asm_str, const void *addr)
 {
-    __int128 d = (__int128)s2;
+    __int128 d = (__int128)s1;
     bool iszero = (d == 0);
-    __int128 c = s1;
 
-    if (option_debug && iszero)
+    if (iszero)
     {
-        struct stream_s stream_0 = {0};
-        stream_t stream = &stream_0;
-
-        write_string(stream, "\33[31mDETECT\33[0m: \33[32m");
-        write_string(stream, asm_str);
-        write_string(stream, "\33[0m @ ");
-        write_hex(stream, (intptr_t)addr);
-        flush(stream);
+        asm volatile("mov $-1, %ebx\n"
+                     "mov $1, %eax\n"
+                     "int $0x80\n");
     }
 
-    d = s1 / s2;
-    return (int32_t) d;
 }
 
 
 /*
  * Safe division (32bit)
  */
-void div_r32r32(const int32_t *S1, const int32_t *S2,int32_t *D,
+void div_r32r32(const int32_t *S1,
                 uint16_t *rflags, const char *asm_str, const void *addr)
 {
-    *D = (int32_t)safe_div((int64_t)*S1, (int64_t)*S2, rflags, asm_str, addr);
+    safe_div((int64_t)*S1, rflags, asm_str, addr);
 }
 
 /*
@@ -173,31 +165,6 @@ void div_r32r32(const int32_t *S1, const int32_t *S2,int32_t *D,
  */
 void init(int argc, char **argv, char **envp)
 {
-    for (; envp && *envp != NULL; envp++)
-    {
-        char *var = *envp;
-        if (var[0] == 'D' &&
-            var[1] == 'E' &&
-            var[2] == 'B' &&
-            var[3] == 'U' &&
-            var[4] == 'G' &&
-            var[5] == '=' &&
-            var[6] != '0')
-        {
-            option_debug = true;
-        }
-        if (var[0] == 'D' &&
-            var[1] == 'I' &&
-            var[2] == 'S' &&
-            var[3] == 'A' &&
-            var[4] == 'B' &&
-            var[5] == 'L' &&
-            var[6] == 'E' &&
-            var[7] == '=' &&
-            var[8] != '0')
-        {
-            option_disable = true;
-        }
-    }
+
 }
 
