@@ -56,8 +56,8 @@ rewrite `x86_64` Linux ELF binaries
 ***without modifying the set of jump targets***.
 To do so, E9Patch uses a set of novel low-level binary rewriting
 techniques, such as *instruction punning, padding and eviction* that can
-insert or replace binary code *without the need to move existing
-instructions*.
+insert or replace binary code without the need to move existing
+instructions.
 Since existing instructions are not moved, the set of jump targets
 remains unchanged, meaning that calls/jumps do not need to be corrected
 (including cross binary calls/jumps).
@@ -211,6 +211,15 @@ instrumentation:
 * Tested for `XTerm(322)`
 * Tested for Google Chrome version `80.0.3987.132 (Official Build) (64-bit)`.
 
+## Projects
+
+Some other projects that use E9Patch include:
+
+* [E9AFL](https://github.com/GJDuck/e9afl): Automatically insert
+  [AFL](https://github.com/google/AFL) instrumentation into binaries.
+* [E9Syscall](https://github.com/GJDuck/e9syscall): System call
+  interception using static binary rewriting of `libc.so`.
+
 ## Documentation
 
 If you just want to test E9Patch out, then please try the above examples.
@@ -238,6 +247,9 @@ has been improved.
 ## License
 
 This software has been released under the GNU Public License (GPL) Version 3.
+
+Some specific files are released under the MIT license (check the file
+preamble).
 
 ## Acknowledgements
 

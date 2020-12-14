@@ -67,7 +67,7 @@ instrumentation*.
 For example, to instrument all jump instructions in `xterm` the command-line
 syntax is as follows:
 
-        ./e9tool --match 'asm=j.*' --action 'call entry@counter' `which xterm` -o a.out
+        ./e9tool --match 'asm=j.*' --action 'call entry@counter' xterm
 
 The syntax is as follows:
 
@@ -89,6 +89,7 @@ saving and restoring the CPU state, and
 embedding the `counter` executable inside the patched binary.
 This makes *call instrumentation* relatively simple to use.
 
+By default the modified binary will be wrtten to `a.out`.
 The instrumented `a.out` file will call the `counter` function each
 time a jump instruction is executed.
 After 100000 jumps, the program will terminate with `SIGTRAP`.
@@ -97,43 +98,34 @@ Additional examples of *call instrumentation* are also
 [available here](https://github.com/GJDuck/e9patch/tree/master/examples).
 
 ---
-### 1.1 Limitations
+### 1.1 Libc Support
 
-The main limitation with *call instrumentation* is that there is
-no access to `libc`.
-This means that standard functions like `printf` cannot be called
-directly.
-The reason is that the instrumentation code is very low-level, and
-bypasses all of the standard dynamic-linking infrastructure.
+A parallel implementation of common libc functions is provided in the
+`examples/stdlib.c` file.
+To use, simply include this file into your project:
 
-One option is to use *system calls* directly rather than relying on
-`libc`.
-For example, the following code implements a generic `syscall()`
-function (see `man syscall`):
+        #include "stdlib.c"
 
-        #include <sys/syscall.h>
-		asm
-		(
-		    ".globl syscall\n"
-		    "syscall:\n"
-		    "mov %edi,%eax\n"
-		    "mov %rsi,%rdi\n"
-		    "mov %rdx,%rsi\n"
-		    "mov %rcx,%rdx\n"
-		    "mov %r8,%r10\n"
-		    "mov %r9,%r8\n"
-		    "mov 0x8(%rsp),%r9\n"
-		    "syscall\n"
-		    "retq\n"
-		);
+This version of libc is designed to be compatible with call instrumentation.
+However, only a subset of libc is implemented, so it is WYSIWYG.
+That said, many common libc functions, including file I/O and memory
+allocation, have been implemented.
 
-The generic `syscall()` function can then be used for file I/O, etc.:
+It is not advisable to call the "real" `glibc` functions from call
+instrumentation, namely:
 
-        // Implements write(1, "Hello World!\n", 13):
+* `glibc` functions use the System V ABI which is not compatible with
+  the clean call ABI.
+  Specifically, the clean ABI does not align the stack nor save/restore
+  floating point registers for performance reasons.
+* Many `glibc` functions are not reentrant and access/modify global state
+  such as `errno`.
+  Thus, calling `glibc` functions directly can break transparency and/or cause
+  problems such as deadlocks.
 
-        syscall(SYS_write, 1, "Hello World!\n", 13);
-
-Most of the low-level POSIX programming API can be implemented this way.
+Unlike `glibc`,
+the parallel libc is designed to be compatible with the clean ABI and
+handle problems such as deadlocks gracefully.
 
 ---
 ### 1.2 Initialization
@@ -141,20 +133,17 @@ Most of the low-level POSIX programming API can be implemented this way.
 It is also possible to define an initialization function.
 For example:
 
+        #include "stdlib.c"
+
+        static int max = 1000;
+
         void init(int argc, char **argv, char **envp)
         {
-            for (; envp && *envp != NULL; envp++)
-            {
-                char *var = *envp;
-                if (var[0] == 'M' && var[1] == 'A' && var[2] == 'X' &&
-                    var[3] == '\0')
-                {
-                    max = 0;
-                    for (unsigned i = 4; var[i] >= '0' && var[i] <= '9'; i++)
-                        max = 10 * max + (var[i] - '0');
-                    break;
-                }
-            }
+            environ = envp;     // Init getenv()
+
+            const char *MAX = getenv("MAX");
+            if (MAX != NULL)
+                max = atoi(MAX);
         }
 
 The initialization function must be named `init`, and will be called
@@ -166,7 +155,7 @@ arguments are only available for patched executables.
 These arguments will be zero/`NULL` for patched shared objects.
 
 In the example above, the initialization function searches for an
-environment variable `MAX`, and sets the max counter accordingly.
+environment variable `MAX`, and sets the `max` counter accordingly.
 
 ---
 ### 1.3 Advanced Options
@@ -176,7 +165,7 @@ are specified in square brackets after the `call` token
 in the `--action` option.
 For example:
 
-        ./e9tool --match 'asm=j.*' --action 'call[after] entry@counter' `which xterm` -o a.out
+        ./e9tool --match 'asm=j.*' --action 'call[after] entry@counter' xterm
 
 This specifies the `after` option, which means the `entry()`
 function should be called after the patched instruction
@@ -185,8 +174,8 @@ function should be called after the patched instruction
 The options are:
 
 * `clean`/`naked` for clean/naked calls.
-* `before`/`after`/`replace` for inserting the
-  call before/after the instruction, or replacing
+* `before`/`after`/`replace`/`conditional` for inserting the
+  call before/after the instruction, or (conditionally) replacing
   the instruction by the call.
 
 Here the `naked` option indicates that the called function will be
@@ -195,12 +184,30 @@ This usually means the function must be implemented in assembly.
 For some applications, this can enable more optimized code.
 The default is `clean`, which means E9Tool will automatically
 generate code for saving/restoring the CPU state.
+Note that, for efficiency reasons, the `clean` call ABI differs from
+the standard System V ABI in the following way:
+
+* The x87/MMX/SSE/AVX/AVX2/AVX512 registers are *not* saved.
+* The stack pointer `%rsp` is *not* guaranteed to be aligned to a 16-byte
+  boundary.
+
+These differences are generally safe provided the instrumentation code
+exclusively uses general-purpose registers
+(as is enforced by `e9compile.sh`).
+Otherwise, it will be necessary to save the registers and align the
+stack manually inside the instrumentation code.
 
 The `before`/`after`/`replace` option specifies where the
 instrumented call should be placed.
 For `replace`, the original instruction is essentially deleted
 from the patched binary, and it is up to the called function to
 execute/emulate a replacement.
+For `conditional`, the return value of the called function will
+be examined.
+If zero is returned, the behavior will be same as `replace` and the original
+instruction will not be executed.
+Otherwise if non-zero, the behavior will be same as `before` and the
+original instruction will be executed in its original context.
 
 ---
 ### 1.4 Arguments
@@ -209,7 +216,7 @@ E9Tool also supports passing arguments to the called function.
 The syntax uses the `C`-style round brackets.
 For example:
 
-        ./e9tool --match 'asm=j.*' --action 'call entry(rip)@counter' `which xterm` -o a.out
+        ./e9tool --match 'asm=j.*' --action 'call entry(rip)@counter' xterm
 
 This specifies that the current value of the instruction pointer
 (`%rip`) should be passed as the first argument to the function
@@ -229,17 +236,31 @@ that is less than the address `0x10000000` (e.g., to enforce PIC code).
 
 Several arguments are supported:
 
-* `asmStr` is a pointer to the string representation of the instruction.
-* `asmStrLen` is the length of `instrAsmStr`.
+* `asm` is a pointer to a string representation of the instruction.
+* `asm.size` is the number of bytes in `asm`.
+* `asm.len` is the length of `asm`.
 * `addr` is the address of the instruction.
+* `base` is the PIC base address.
 * `instr` is the bytes of the instruction.
-* `instrLen` is the length of `instrBytes`.
 * `next` is the address of the next instruction.
+* `offset` is the file offset of the instruction.
 * `target` is the jump/call/return target address, else -1.
 * `trampoline` is the address of the trampoline.
-* `rax`...`r15`, `rip`, `rflags` is the corresponding register value.
-* `&rax`...`&r15` is the corresponding register value (pass-by-pointer).
+* `random` is a random value [0..2147483647].
 * `staticAddr` is the (static) address of the instruction.
+* `size` is the number of bytes in `instr`.
+* `ah`...`dh`, `al`...`r15b`,
+  `ax`...`r15w`, `eax`...`r15d`,
+  `rax`...`r15`, `rip`, `rflags` is the corresponding register value.
+* `&ah`...`&dh`, `&al`...`&r15b`,
+  `&ax`...`&r15w`, `&eax`...`&r15d`,
+  `&rax`...`&r15`, `&rflags` is the corresponding register value but
+   passed-by-pointer.
+* `op[i]`, `src[i]`, `dst[i]`, `imm[i]`, `reg[i]`, `mem[i]` is the ith
+  operand, source operand, destination operand, immediate operand, register
+  operand, memory operand respectively.
+* `&op[i]`, `&src[i]`, `&dst[i]`, `&imm[i]`, `&reg[i]`, `&mem[i]` is the
+   same as above but passed-by-pointer.
 * An integer constant.
 * A file lookup of the form `basename[index]` where
   `basename` is the basename of a CSV file used in
@@ -396,7 +417,7 @@ Several builtin labels are also implicitly defined, including:
 
         {
             "jsonrpc": "2.0",
-             "method": "trampoline",
+            "method": "trampoline",
             "params":
             {
                 "name":"print",
@@ -633,7 +654,7 @@ The `"emit"` message instructs E9Patch to emit the patched binary file.
     This controls the aggressiveness of the *Physical Page Grouping*
     optimization.
     Valid values must be a power-of-two times the page size (4096),
-    which smaller values corresponding to more aggressive space optimization.
+    where smaller values corresponding to more aggressive space optimization.
 
 #### Example:
 
@@ -668,9 +689,11 @@ The E9Tool plugin API is very simple and consists of just four functions:
     Called once before the binary is disassembled.
 2. `e9_plugin_instr_v1(FILE *out, const ELF *in, ...)`:
     Called once for each disassembled instruction.
-3. `e9_plugin_patch_v1(FILE *out, const ELF *in, ...)`:
+3. `e9_plugin_match_v1(FILE *out, const ELF *in, ...)`:
+    Called once for each matching.
+4. `e9_plugin_patch_v1(FILE *out, const ELF *in, ...)`:
     Called for each patch location.
-4. `e9_plugin_fini_v1(FILE *out, const ELF *in, ...)`:
+5. `e9_plugin_fini_v1(FILE *out, const ELF *in, ...)`:
     Called once after all instructions have been patched.
 
 Note that each function is optional, and the plugin can choose not to
@@ -696,7 +719,7 @@ Some API function return a value, including:
 
 * `e9_plugin_init_v1()` returns an optional `context` that will be
   passed to all other API calls.
-* `e9_plugin_instr_v1()` returns an integer value of the plugin's
+* `e9_plugin_match_v1()` returns an integer value of the plugin's
    choosing.  This integer value can be matched using by the `--match`
    E9Tool command-line option, else the value will be ignored.
 
@@ -720,7 +743,10 @@ The `e9_plugin_instr_v1()` function will do the following:
 
 1. Analyze or remember the instruction (if necessary)
 2. Setup additional trampolines (if necessary)
-3. Veto the patching decision (optional)
+
+The `e9_plugin_match_v1()` function will do the following:
+
+1. Return a value to be used in a matching.
 
 The `e9_plugin_patch_v1()` function will do the following:
 
@@ -741,21 +767,21 @@ Plugins can be used by E9Tool and the `--action` option.
 For example:
 
         g++ -std=c++11 -fPIC -shared -o myPlugin.so myPlugin.cpp -I . -I capstone/include/
-        ./e9tool --match 'asm=j.*' --action 'plugin[myPlugin]' `which xterm` -o a.out
+        ./e9tool --match 'asm=j.*' --action 'plugin(myPlugin).patch()' xterm
 
 The syntax is as follows:
 
 * `--action`: Selects the E9Tool "action" command-line option.
   This tells E9Tool what patching/instrumentation action to do.
-* `plugin[myPlugin]`: Specifies that instrument the program using the
+* `plugin(myPlugin).patchh()`: Specifies that instrument the program using the
   `myPlugin.so` plugin.
 
-If `myPlugin.so` exports the `e9_plugin_instr_v1()` function, it is also
+If `myPlugin.so` exports the `e9_plugin_match_v1()` function, it is also
 possible to match against the return value.
 For example:
 
-        ./e9tool --match 'plugin[myPlugin] > 0x333' --action 'plugin[myPlugin]' `which xterm` -o a.out
+        ./e9tool --match 'plugin(myPlugin).match() > 0x333' --action 'plugin(myPlugin).patch()' xterm
 
-This command will only patch instructions where the `e9_plugin_instr_v1()`
+This command will only patch instructions where the `e9_plugin_match_v1()`
 function returns a value greater than `0x333`.
 

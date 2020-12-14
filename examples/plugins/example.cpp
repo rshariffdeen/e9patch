@@ -19,8 +19,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * NOTE: This file (and only this file) is under the MIT license, whereas
- *       the rest of the E9Tool/E9Patch source code is GPLv3.
+ * NOTE: As a special exception, this file is under the MIT license.  The
+ *       rest of the E9Patch/E9Tool source code is under the GPLv3 license.
  */
 
 /*
@@ -145,9 +145,9 @@ extern void *e9_plugin_init_v1(FILE *out, const e9frontend::ELF *elf)
 }
 
 /*
- * We select all control-flow transfer instructions.
+ * We match all control-flow transfer instructions.
  */
-extern intptr_t e9_plugin_instr_v1(FILE *out, const e9frontend::ELF *elf,
+extern intptr_t e9_plugin_match_v1(FILE *out, const e9frontend::ELF *elf,
     csh handle, off_t offset, const cs_insn *I, void *context)
 {
     const cs_detail *detail = I->detail;

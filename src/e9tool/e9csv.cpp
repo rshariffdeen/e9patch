@@ -235,55 +235,57 @@ static Data *parseCSV(const char *filename)
 /*
  * Convert a name into an integer.
  */
-static const char *parseInt(const char *s, intptr_t &x);
-static intptr_t nameToInt(const char *filename, const char *name)
+static intptr_t nameToInt(const char *basename, const char *name)
 {
-    intptr_t x;
-    const char *end = parseInt(name, x);
-    if (end == nullptr || *end != '\0')
-        error("failed to convert value \"%s\" from CSV file \"%s\" "
-            "into an integer", name, filename);
+    const char *s = name;
+    while (isspace(*s))
+        s++;
+    bool neg = false;
+    if (s[0] == '+')
+        s++;
+    else if (s[0] == '-')
+    {
+        neg = true;
+        s++;
+    }
+    int base = (s[0] == '0' && s[1] == 'x'? 16: 10);
+    char *end = nullptr;
+    intptr_t x = (intptr_t)strtoull(s, &end, base);
+    if (end == nullptr || end == s)
+    {
+parse_error:
+        error("failed to convert value \"%s\" from CSV file \"%s.csv\" "
+            "into an integer", name, basename);
+    }
+    while (isspace(*end))
+        end++;
+    if (*end != '\0')
+        goto parse_error;
+    x = (neg? -x: x);
     return x;
 }
 
 /*
  * Build an integer index.
  */
-static void buildIntIndex(const char *filename, const Data &data, unsigned i,
-    Index<intptr_t> &index)
+static void buildIntIndex(const char *basename, const Data &data, unsigned i,
+    Index<MatchValue> &index)
 {
     for (const auto &record: data)
     {
         if (i >= record.size())
-            error("failed to build index for CSV file \"%s\"; index %u is "
-                "out-of-range (0..%zu)\n", filename, i, record.size()-1);
+            error("failed to build index for CSV file \"%s.csv\"; index %u is "
+                "out-of-range (0..%zu)\n", basename, i, record.size()-1);
         const char *name = record[i];
-        intptr_t x = nameToInt(filename, name);
-        auto i = index.find(x);
+        intptr_t x = nameToInt(basename, name);
+        MatchValue key = {0};
+        key.type = MATCH_TYPE_INTEGER;
+        key.i    = x;
+        auto i = index.find(key);
         if (i != index.end())
-            error("failed to build index for CSV file \"%s\"; duplicate "
-                "value \"%s\"", filename, name);
-        index.insert(i, {x, &record});
-    }
-}
-
-/*
- * Build a string index.
- */
-static void buildStringIndex(const char *filename, const Data &data,
-    unsigned i, Index<const char *, CStrCmp> &index)
-{
-    for (const auto &record: data)
-    {
-        if (i >= record.size())
-            error("failed to build index for CSV file \"%s\"; index %u is "
-                "out-of-range (0..%zu)\n", filename, i, record.size()-1);
-        const char *str = record[i];
-        auto i = index.find(str);
-        if (i != index.end())
-            error("failed to build index for CSV file \"%s\"; duplicate "
-                "value \"%s\"", filename, str);
-        index.insert(i, {str, &record});
+            error("failed to build index for CSV file \"%s.csv\"; duplicate "
+                "value \"%s\"", basename, name);
+        index.insert(i, {key, &record});
     }
 }
 
