@@ -48,6 +48,30 @@ struct Metadata
 };
 
 /*
+ * Call kind
+ */
+enum CallKind
+{
+    CALL_BEFORE,
+    CALL_AFTER,
+    CALL_REPLACE,
+    CALL_CONDITIONAL
+};
+
+/*
+ * Argument fields.
+ */
+enum FieldKind
+{
+    FIELD_NONE,                     // No field.
+    FIELD_DISPL,                    // Displacement.
+    FIELD_BASE,                     // Base register.
+    FIELD_INDEX,                    // Index register.
+    FIELD_SCALE,                    // Scale.
+    FIELD_SIZE,                     // Operand size.
+};
+
+/*
  * Arguments.
  */
 enum ArgumentKind
@@ -60,12 +84,69 @@ enum ArgumentKind
     ARGUMENT_NEXT,                  // Next instruction address
     ARGUMENT_BASE,                  // Base address of ELF binary in memory
     ARGUMENT_STATIC_ADDR,           // (Static) instruction address
-    ARGUMENT_ASM_STR,               // Assembly string
-    ARGUMENT_ASM_STR_LEN,           // Assembly string length
+    ARGUMENT_ASM,                   // Assembly string
+    ARGUMENT_ASM_SIZE,              // Assembly string size
+    ARGUMENT_ASM_LEN,               // Assembly string length
     ARGUMENT_BYTES,                 // Instruction bytes
-    ARGUMENT_BYTES_LEN,             // Instruction bytes length
+    ARGUMENT_BYTES_SIZE,            // Instruction bytes size
     ARGUMENT_TARGET,                // Call/jump target
     ARGUMENT_TRAMPOLINE,            // Trampoline
+    ARGUMENT_RANDOM,                // Random number
+    
+    ARGUMENT_AL,                    // %al register
+    ARGUMENT_AH,                    // %ah register
+    ARGUMENT_BL,                    // %bl register
+    ARGUMENT_BH,                    // %bh register
+    ARGUMENT_CL,                    // %cl register
+    ARGUMENT_CH,                    // %ch register
+    ARGUMENT_DL,                    // %dl register
+    ARGUMENT_DH,                    // %dh register
+    ARGUMENT_BPL,                   // %bpl register
+    ARGUMENT_DIL,                   // %dil register
+    ARGUMENT_SIL,                   // %sil register
+    ARGUMENT_R8B,                   // %r8b register
+    ARGUMENT_R9B,                   // %r9b register
+    ARGUMENT_R10B,                  // %r10b register
+    ARGUMENT_R11B,                  // %r11b register
+    ARGUMENT_R12B,                  // %r12b register
+    ARGUMENT_R13B,                  // %r13b register
+    ARGUMENT_R14B,                  // %r14b register
+    ARGUMENT_R15B,                  // %r15b register
+    ARGUMENT_SPL,                   // %spl register
+    
+    ARGUMENT_AX,                    // %ax register
+    ARGUMENT_BX,                    // %bx register
+    ARGUMENT_CX,                    // %cx register
+    ARGUMENT_DX,                    // %dx register
+    ARGUMENT_BP,                    // %bp register
+    ARGUMENT_DI,                    // %di register
+    ARGUMENT_SI,                    // %si register
+    ARGUMENT_R8W,                   // %r8w register
+    ARGUMENT_R9W,                   // %r9w register
+    ARGUMENT_R10W,                  // %r10w register
+    ARGUMENT_R11W,                  // %r11w register
+    ARGUMENT_R12W,                  // %r12w register
+    ARGUMENT_R13W,                  // %r13w register
+    ARGUMENT_R14W,                  // %r14w register
+    ARGUMENT_R15W,                  // %r15w register
+    ARGUMENT_SP,                    // %sp register
+
+    ARGUMENT_EAX,                   // %eax register
+    ARGUMENT_EBX,                   // %ebx register
+    ARGUMENT_ECX,                   // %ecx register
+    ARGUMENT_EDX,                   // %edx register
+    ARGUMENT_EBP,                   // %ebp register
+    ARGUMENT_EDI,                   // %edi register
+    ARGUMENT_ESI,                   // %esi register
+    ARGUMENT_R8D,                   // %r8d register
+    ARGUMENT_R9D,                   // %r9d register
+    ARGUMENT_R10D,                  // %r10d register
+    ARGUMENT_R11D,                  // %r11d register
+    ARGUMENT_R12D,                  // %r12d register
+    ARGUMENT_R13D,                  // %r13d register
+    ARGUMENT_R14D,                  // %r14d register
+    ARGUMENT_R15D,                  // %r15d register
+    ARGUMENT_ESP,                   // %esp register
 
     ARGUMENT_RAX,                   // %rax register
     ARGUMENT_RBX,                   // %rbx register
@@ -85,29 +166,13 @@ enum ArgumentKind
     ARGUMENT_RFLAGS,                // %rflags register
     ARGUMENT_RIP,                   // %rip register
     ARGUMENT_RSP,                   // %rsp register
-    
-    ARGUMENT_RAX_PTR,               // %rax register pointer
-    ARGUMENT_RBX_PTR,               // %rbx register pointer
-    ARGUMENT_RCX_PTR,               // %rcx register pointer
-    ARGUMENT_RDX_PTR,               // %rdx register pointer
-    ARGUMENT_RBP_PTR,               // %rbp register pointer
-    ARGUMENT_RDI_PTR,               // %rdi register pointer
-    ARGUMENT_RSI_PTR,               // %rsi register pointer
-    ARGUMENT_R8_PTR,                // %r8 register pointer
-    ARGUMENT_R9_PTR,                // %r9 register pointer
-    ARGUMENT_R10_PTR,               // %r10 register pointer
-    ARGUMENT_R11_PTR,               // %r11 register pointer
-    ARGUMENT_R12_PTR,               // %r12 register pointer
-    ARGUMENT_R13_PTR,               // %r13 register pointer
-    ARGUMENT_R14_PTR,               // %r14 register pointer
-    ARGUMENT_R15_PTR,               // %r15 register pointer
-    ARGUMENT_RFLAGS_PTR,            // %rflags register pointer
-    ARGUMENT_RIP_PTR,               // %rip register pointer
-    ARGUMENT_RSP_PTR,               // %rsp register pointer
-
+ 
     ARGUMENT_OP,                    // Operand[i]
     ARGUMENT_SRC,                   // Source operand[i]
     ARGUMENT_DST,                   // Dest operand[i]
+    ARGUMENT_IMM,                   // Immediate operand[i]
+    ARGUMENT_REG,                   // Register operand[i]
+    ARGUMENT_MEM,                   // Memory operand[i]
 
     ARGUMENT_MAX                    // Maximum argument value
 };
@@ -115,6 +180,8 @@ enum ArgumentKind
 struct Argument
 {
     ArgumentKind kind;              // Argument kind.
+    FieldKind field;                // Argument field.
+    bool ptr;                       // Argument is passed by pointer?
     bool duplicate;                 // Argument is a duplicate?
     intptr_t value;                 // Argument value (ARGUMENT_INTEGER/USER).
     const char *name;               // Argument name  (ARGUMENT_USER).
@@ -144,23 +211,29 @@ extern unsigned sendReserveMessage(FILE *out, intptr_t addr, size_t len,
 extern unsigned sendReserveMessage(FILE *out, intptr_t addr,
     const uint8_t *data, size_t len, int prot, intptr_t init = 0x0,
     intptr_t mmap = 0x0, bool absolute = false);
-extern void sendELFFileMessage(FILE *out, const ELF &elf,
+extern void sendELFFileMessage(FILE *out, const ELF *elf,
     bool absolute = false);
 extern unsigned sendPassthruTrampolineMessage(FILE *out);
 extern unsigned sendPrintTrampolineMessage(FILE *out);
 extern unsigned sendTrapTrampolineMessage(FILE *out);
-extern unsigned sendCallTrampolineMessage(FILE *out, const ELF &elf,
-    const char *filename, const char *symbol, const char *name,
-    const std::vector<Argument> &args, bool clean = true, bool before = true,
-    bool replace = false);
+extern unsigned sendExitTrampolineMessage(FILE *out, int status);
+extern unsigned sendCallTrampolineMessage(FILE *out, const char *name,
+    const std::vector<Argument> &args, bool clean = true, 
+    CallKind call = CALL_BEFORE);
 extern unsigned sendTrampolineMessage(FILE *out, const char *name,
     const char *template_);
 
 /*
  * Misc. functions:
  */
-extern void parseELF(const char *filename, intptr_t base, ELF &elf);
-extern intptr_t lookupSymbol(const ELF &elf, const char *symbol);
+extern ELF *parseELF(const char *filename, intptr_t base);
+extern void freeELF(ELF *elf);
+extern const uint8_t *getELFData(const ELF *elf);
+extern size_t getELFDataSize(const ELF *elf);
+extern intptr_t getSymbol(const ELF *elf, const char *symbol);
+extern intptr_t getTextAddr(const ELF *elf);
+extern off_t getTextOffset(const ELF *elf);
+extern size_t getTextSize(const ELF *elf);
 extern void NO_RETURN error(const char *msg, ...);
 extern void warning(const char *msg, ...);
 

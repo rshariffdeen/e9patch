@@ -361,7 +361,10 @@ static void patchUnused(Patch *P, unsigned offset)
     for (unsigned i = offset; i < P->I->size; i++)
     {
         if (P->I->patched.state[i] == STATE_INSTRUCTION)
+        {
+            P->I->patched.bytes[i] = /*int3=*/0xcc;
             P->I->patched.state[i] = STATE_FREE;
+        }
     }
 }
 
@@ -505,7 +508,7 @@ static Patch *tactic_T3b(Binary &B, Instr *I, const Trampoline *T)
         for (J = I->prev; J != nullptr && J->addr > target; J = J->prev)
             ;
     }
-    if (J == nullptr || target == J->addr ||
+    if (J == nullptr || target <= J->addr ||
             (J->addr < I->addr && J->addr + J->size > I->addr))
         return nullptr;
     unsigned i = target - J->addr;
