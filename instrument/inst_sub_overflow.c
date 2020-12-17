@@ -1,4 +1,3 @@
-#include "instrument.h"
 #include "stdlib.c"
 
 /************************************************************************/
@@ -24,21 +23,7 @@ static void safe_sub(int64_t s1, int64_t s2, uint16_t *rflags, int64_t lb,
 
     if (option_debug && overflow)
     {
-        struct stream_s stream_0 = {0};
-        stream_t stream = &stream_0;
-
-        write_string(stream, "\33[31mDETECT SUB OVERFLOW\33[0m: \33[32m");
-        write_string(stream, asm_str);
-        write_string(stream, "\33[0m @ ");
-        write_hex(stream, (intptr_t)addr);
-        write_string(stream, " (\33[33m");
-        write_int(stream, s1);
-        write_string(stream, " - ");
-        write_int(stream, s2);
-        write_string(stream, " = ");
-        write_int(stream, (int64_t)c);
-        write_string(stream, "\33[0m)\n");
-        flush(stream);
+        fprintf(stderr, RED "DETECT SUB OVERFLOW" WHITE ": %s @ %.16lx (%.2x - %.2x = %.2x)", asm_str, addr, s1, s2, c);
     }
 
 }
