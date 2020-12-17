@@ -1,4 +1,5 @@
 #include "instrument.h"
+#include "stdlib.c"
 
 /************************************************************************/
 /* TEMPLATES                                                            */
@@ -65,6 +66,7 @@ void ptr_r64(const int64_t *S,const int64_t *D,
  */
 void init(int argc, char **argv, char **envp)
 {
+    setvbuf(stderr, NULL, _IOFBF, 0);
     for (; envp && *envp != NULL; envp++)
     {
         char *var = *envp;

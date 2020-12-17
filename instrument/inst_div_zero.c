@@ -1,4 +1,5 @@
 #include "instrument.h"
+#include "stdlib.c"
 
 /************************************************************************/
 /* TEMPLATES                                                            */
@@ -60,6 +61,7 @@ void div_r64(const int64_t *S1,
  */
 void init(int argc, char **argv, char **envp)
 {
+    setvbuf(stderr, NULL, _IOFBF, 0);
     for (; envp && *envp != NULL; envp++)
     {
         char *var = *envp;

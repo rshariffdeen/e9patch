@@ -1,5 +1,5 @@
 #include "instrument.h"
-
+#include "stdlib.c"
 
 /************************************************************************/
 /* TEMPLATES                                                            */
@@ -103,6 +103,7 @@ __attribute__((__alias__("mul_r32r32")));
  */
 void init(int argc, char **argv, char **envp)
 {
+    setvbuf(stderr, NULL, _IOFBF, 0);
     for (; envp && *envp != NULL; envp++)
     {
         char *var = *envp;

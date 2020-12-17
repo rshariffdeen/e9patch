@@ -1,4 +1,5 @@
 #include "instrument.h"
+#include "stdlib.c"
 
 /************************************************************************/
 /* TEMPLATES                                                            */
@@ -87,6 +88,7 @@ void add_32(const int32_t *S1, const int32_t *S2, int32_t *D,
  */
 void init(int argc, char **argv, char **envp)
 {
+    setvbuf(stderr, NULL, _IOFBF, 0);
     for (; envp && *envp != NULL; envp++)
     {
         char *var = *envp;
