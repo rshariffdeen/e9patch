@@ -24,7 +24,7 @@ static void safe_add(int64_t s1, int64_t s2, uint16_t *rflags, int64_t lb,
 
     if (option_debug && overflow)
     {
-        fprintf(stderr, RED "DETECT MUL OVERFLOW" WHITE ": %s @ %.16lx (%.2x * %.2x = %.2x)\n", asm_str, addr, s1, s2, c);
+        fprintf(stderr, RED "DETECT MUL OVERFLOW" WHITE ": %s @ 0x%.16lx (%.2x * %.2x = %.2x)\n", asm_str, addr, s1, s2, c);
         fflush_unlocked(stderr);
     }
 
