@@ -8,6 +8,10 @@
 // SF:ZF:0:AF:0:PF:1:CF:0:0:0:0:0:0:0:OF
 #define OF  0x0001
 #define CF  0x0100
+#define RED     "\33[31m"
+#define GREEN   "\33[32m"
+#define YELLOW  "\33[33m"
+#define WHITE   "\33[0m"
 
 static bool option_debug   = true;
 static bool option_disable = true;

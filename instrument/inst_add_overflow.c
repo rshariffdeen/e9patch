@@ -8,6 +8,11 @@
 // SF:ZF:0:AF:0:PF:1:CF:0:0:0:0:0:0:0:OF
 #define OF  0x0001
 #define CF  0x0100
+#define RED     "\33[31m"
+#define GREEN   "\33[32m"
+#define YELLOW  "\33[33m"
+#define WHITE   "\33[0m"
+
 
 static bool option_debug   = true;
 static bool option_disable = true;
@@ -24,7 +29,7 @@ static void safe_add(int64_t s1, int64_t s2, uint16_t *rflags, int64_t lb,
 
     if (option_debug && overflow)
     {
-        fprintf(stderr, RED "DETECT MUL OVERFLOW" WHITE ": %s @ 0x%.16lx (%.2x * %.2x = %.2x)\n", asm_str, addr, s1, s2, c);
+        fprintf(stderr, RED "DETECT ADD OVERFLOW" WHITE ": %s @ 0x%.16lx (%.2x * %.2x = %.2x)\n", asm_str, addr, s1, s2, c);
         fflush_unlocked(stderr);
     }
 

@@ -11,6 +11,11 @@
 static bool option_debug   = true;
 static bool option_disable = true;
 
+#define RED     "\33[31m"
+#define GREEN   "\33[32m"
+#define YELLOW  "\33[33m"
+#define WHITE   "\33[0m"
+
 /*
  * Safe subtraction.
  */
