@@ -28,8 +28,6 @@ static void safe_ptr(void* s, void* d, uint16_t *rflags, const char *asm_str, co
     bool isnull = (s == NULL || d == NULL);
     if (option_debug && isnull)
     {
-        struct stream_s stream_0 = {0};
-        stream_t stream = &stream_0;
         fprintf(stderr, RED "DETECT NULL PTR" WHITE ": " asm_str " @ %.16lx ( %.2x - %.2x )", addr, s, d);
     }
 
