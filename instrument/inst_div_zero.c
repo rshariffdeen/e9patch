@@ -27,7 +27,7 @@ static void safe_div(int64_t s1, uint16_t *rflags, const char *asm_str, const vo
 
     if (option_debug && iszero)
     {
-        fprintf(stderr, RED "DETECT DIV ZERO" WHITE ": %s @ %.16lx (%.16lx)", asm_str, addr);
+        fprintf(stderr, RED "DETECT DIV ZERO" WHITE ": %s @ %.16lx (%.16lx)\n", asm_str, addr);
         fflush_unlocked(stderr);
     }
 
