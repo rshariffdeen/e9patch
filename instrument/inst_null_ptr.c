@@ -28,7 +28,7 @@ static void safe_ptr(void* s, void* d, uint16_t *rflags, const char *asm_str, co
     bool isnull = (s == NULL || d == NULL);
     if (option_debug && isnull)
     {
-        fprintf(stderr, RED "DETECT NULL PTR" WHITE ": " asm_str " @ %.16lx ( %.2x - %.2x )", addr, s, d);
+        fprintf(stderr, RED "DETECT NULL PTR" WHITE ": " %s " @ %.16lx ( %.2x - %.2x )", asm_str, addr, s, d);
     }
 
 }
