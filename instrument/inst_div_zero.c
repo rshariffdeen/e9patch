@@ -1,4 +1,3 @@
-#include "instrument.h"
 #include "stdlib.c"
 
 /************************************************************************/
@@ -9,6 +8,11 @@
 #define ZF  0x0040
 #define OF  0x0001
 #define CF  0x0100
+
+#define RED     "\33[31m"
+#define GREEN   "\33[32m"
+#define YELLOW  "\33[33m"
+#define WHITE   "\33[0m"
 
 static bool option_debug   = true;
 static bool option_disable = true;
@@ -23,15 +27,7 @@ static void safe_div(int64_t s1, uint16_t *rflags, const char *asm_str, const vo
 
     if (option_debug && iszero)
     {
-        struct stream_s stream_0 = {0};
-        stream_t stream = &stream_0;
-
-        write_string(stream, "\33[31mDETECT DIV ZERO\33[0m: \33[32m");
-        write_string(stream, asm_str);
-        write_string(stream, "\33[0m @ ");
-        write_hex(stream, (intptr_t)addr);
-        write_string(stream, " ()\33[0m\n");
-        flush(stream);
+        fprintf(stderr, RED "DETECT DIV ZERO" WHITE ": %s @ %.16lx ()", asm_str, addr);
     }
 
 }
