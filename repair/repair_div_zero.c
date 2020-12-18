@@ -1,4 +1,5 @@
 #include "repair.h"
+#include "stdlib.c"
 
 /************************************************************************/
 /* TEMPLATES                                                            */
@@ -8,6 +9,11 @@
 #define ZF  0x0040
 #define OF  0x0001
 #define CF  0x0100
+#define RED     "\33[31m"
+#define GREEN   "\33[32m"
+#define YELLOW  "\33[33m"
+#define WHITE   "\33[0m"
+
 
 static bool option_debug   = true;
 static bool option_disable = true;
@@ -22,9 +28,10 @@ static void safe_div(int64_t s1, uint16_t *rflags, const char *asm_str, const vo
 
     if (iszero)
     {
-        asm volatile("mov $-1, %ebx\n"
-                     "mov $1, %eax\n"
-                     "int $0x80\n");
+        fprintf(stderr, GREEN "AVOIDED DIV ZERO" WHITE ": %s @ 0x%.16lx (%.16lx)\n", asm_str, addr, s1);
+        fflush_unlocked(stderr);
+        asm volatile("mov $0x1, %edi\n"
+                     "callq $510\n");
     }
 
 }
