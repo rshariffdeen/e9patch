@@ -27,7 +27,7 @@ static void safe_div(int64_t s1, uint16_t *rflags, const char *asm_str, const vo
 
     if (iszero)
     {
-        fprintf(stderr, GREEN "AVOIDED DIV ZERO" WHITE ": %s @ 0x%.16lx (%.16lx)\n", asm_str, addr, s1);
+        fprintf(stderr, GREEN "AVOIDED DIV ZERO" WHITE ": %s @ 0x%.16lx (%d)\n", asm_str, addr, s1);
         fflush_unlocked(stderr);
         asm volatile("mov $1, %ebx\n"
                      "mov $1, %eax\n"
