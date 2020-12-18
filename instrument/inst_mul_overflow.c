@@ -85,7 +85,7 @@ void mul_r32r32(const int32_t *S1, const int32_t *S2, int32_t *D,
  * Safe multiplication (32bit three operand form)
  */
 void mul_imm32r32r32(const int32_t *S1, const int32_t *S2, int32_t *D,
-                     uint16_t *rflags, const char *asmStr, const void *addr), size_t op_count
+                     uint16_t *rflags, const char *asmStr, const void *addr, size_t op_count)
 __attribute__((__alias__("mul_r32r32")));
 
 /*
