@@ -19,7 +19,7 @@ static bool option_disable = true;
  * Safe multiplication.
  */
 static void safe_mul(int64_t s1, int64_t s2, uint16_t *rflags, int64_t lb,
-                        int64_t ub, const char *asm_str, const void *addr)
+                        int64_t ub, const char *asm_str, const void *addr, size_t op_count)
 {
     __int128 d = (__int128)s1 * (__int128)s2;
     __int128 c = d;
@@ -27,7 +27,7 @@ static void safe_mul(int64_t s1, int64_t s2, uint16_t *rflags, int64_t lb,
 
     if (option_debug && overflow)
     {
-        fprintf(stderr, RED "DETECT MUL OVERFLOW" WHITE ": %s @ 0x%.16lx (%d * %d = %d)\n", asm_str, addr, s1, s2, c);
+        fprintf(stderr, RED "DETECT MUL OVERFLOW" WHITE ": %s %d @ 0x%.16lx (%d * %d = %d)\n", asm_str, op_count, addr, s1, s2, c);
         fflush_unlocked(stderr);
     }
 
@@ -56,36 +56,36 @@ DEBUG=1 ./a.out
  * Safe multiplication (64bit two operand form)
  */
 void mul_r64r64(const int64_t *S1, const int64_t *S2, int64_t *D,
-                uint16_t *rflags, const char *asm_str, const void *addr)
+                uint16_t *rflags, const char *asm_str, const void *addr, size_t op_count)
 {
-    safe_mul(*S1, *S2, rflags, INT64_MIN, INT64_MAX, asm_str, addr);
+    safe_mul(*S1, *S2, rflags, INT64_MIN, INT64_MAX, asm_str, addr, op_count);
 }
 
 /*
  * Safe multiplication (64bit three operand form)
  */
 void mul_imm32r64r64(const int32_t *S1, const int64_t *S2, int64_t *D,
-                     uint16_t *rflags, const char *asm_str, const void *addr)
+                     uint16_t *rflags, const char *asm_str, const void *addr, size_t op_count)
 {
     safe_mul((int64_t)*S1, *S2, rflags, INT64_MIN, INT64_MAX, asm_str,
-                  addr);
+                  addr, op_count);
 }
 
 /*
  * Safe multiplication (32bit two operand form)
  */
 void mul_r32r32(const int32_t *S1, const int32_t *S2, int32_t *D,
-                uint16_t *rflags, const char *asm_str, const void *addr)
+                uint16_t *rflags, const char *asm_str, const void *addr, size_t op_count)
 {
     safe_mul((int64_t)*S1, (int64_t)*S2, rflags, INT32_MIN,
-                           INT32_MAX, asm_str, addr);
+                           INT32_MAX, asm_str, addr, op_count);
 }
 
 /*
  * Safe multiplication (32bit three operand form)
  */
 void mul_imm32r32r32(const int32_t *S1, const int32_t *S2, int32_t *D,
-                     uint16_t *rflags, const char *asmStr, const void *addr)
+                     uint16_t *rflags, const char *asmStr, const void *addr), size_t op_count
 __attribute__((__alias__("mul_r32r32")));
 
 /*
