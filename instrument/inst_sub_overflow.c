@@ -57,9 +57,9 @@ DEBUG=1 ./a.out
  * Safe subtraction (64bit two operand form)
  */
 void sub_64(const int64_t *S1, const int64_t *S2, int64_t *D,
-                uint16_t *rflags, const char *asm_str, const void *addr, size_t op_count)
+                uint16_t *rflags, const char *asm_str, const void *addr)
 {
-    safe_sub(*S1, *S2, rflags, INT64_MIN, INT64_MAX, asm_str, addr, op_count);
+    safe_sub(*S1, *S2, rflags, INT64_MIN, INT64_MAX, asm_str, addr, 3);
 }
 
 
@@ -67,10 +67,10 @@ void sub_64(const int64_t *S1, const int64_t *S2, int64_t *D,
  * Safe addition (32bit two operand form)
  */
 void sub_32(const int32_t *S1, const int32_t *S2, int32_t *D,
-                uint16_t *rflags, const char *asm_str, const void *addr, size_t op_count)
+                uint16_t *rflags, const char *asm_str, const void *addr)
 {
     safe_sub((int64_t)*S1, (int64_t)*S2, rflags, INT32_MIN,
-                           INT32_MAX, asm_str, addr, op_count);
+                           INT32_MAX, asm_str, addr, 2);
 }
 
 
