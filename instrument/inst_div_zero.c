@@ -22,7 +22,7 @@ static bool option_disable = true;
  */
 static void safe_div(int64_t s1, uint16_t *rflags, const char *asm_str, const void *addr)
 {
-    __int128 d = (__int128)s1;
+    int32_t d = (int32_t)s1;
     bool iszero = (d == 0);
 
     if (option_debug && iszero)
